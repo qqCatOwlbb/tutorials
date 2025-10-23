@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-2.0-only
-# Reason-GPL: import-scapy
-import os
 import sys
 
-from scapy.all import (
-    FieldLenField,
-    FieldListField,
-    IntField,
-    IPOption,
-    ShortField,
-    get_if_list,
-    sniff
-)
-from scapy.layers.inet import _IPOption_HDR
+from scapy.all import get_if_list, sniff
 
 
 def get_if():
@@ -28,18 +16,6 @@ def get_if():
         exit(1)
     return iface
 
-class IPOption_MRI(IPOption):
-    name = "MRI"
-    option = 31
-    fields_desc = [ _IPOption_HDR,
-                    FieldLenField("length", None, fmt="B",
-                                  length_of="swids",
-                                  adjust=lambda pkt,l:l+4),
-                    ShortField("count", 0),
-                    FieldListField("swids",
-                                   [],
-                                   IntField("", 0),
-                                   length_from=lambda pkt:pkt.count*4) ]
 def handle_pkt(pkt):
     print("got a packet")
     pkt.show2()
@@ -48,11 +24,10 @@ def handle_pkt(pkt):
 
 
 def main():
-    ifaces = [i for i in os.listdir('/sys/class/net/') if 'eth' in i]
-    iface = ifaces[0]
+    iface = 'eth0'
     print("sniffing on %s" % iface)
     sys.stdout.flush()
-    sniff(filter="tcp", iface = iface,
+    sniff(filter="udp and port 4321", iface = iface,
           prn = lambda x: handle_pkt(x))
 
 if __name__ == '__main__':
